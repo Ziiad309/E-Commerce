@@ -1,0 +1,26 @@
+<%- include('../includes/header') %>
+<link rel="stylesheet" href="">
+<body>
+    <div class="products__container">
+        <% if(products.length > 0) { %>
+            <% products.forEach(product => { %>
+                <div class="product__card">
+                    <figure>
+                        <img src="<%= product.imageURL %>" alt="<%= product.name %>">
+                    </figure>
+                    <figcaption>
+                        <p class="title"><%= product.name %></p>
+                        <p class="desc"><%= product.description %></p>
+                        <p class="price">$<%= product.price %></p>
+                        <form action="/add-to-cart/<%= product._id %>" method="POST">
+                            <button type="submit">Add to Cart</button>
+                        </form>
+                    </figcaption>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div class="couldnt__found">No items found.</div>
+        <% } %>
+    </div>
+</body>
+</html>
