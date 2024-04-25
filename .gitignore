@@ -5,7 +5,7 @@ node_modules/
 npm-debug.log
 
 # Ignore .env file containing environment variables
-# .env
+.env
 
 # Ignore log files
 logs/
