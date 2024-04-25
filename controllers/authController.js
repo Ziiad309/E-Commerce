@@ -1,7 +1,7 @@
 const userModel = require('../models/user');
 const adminModel = require('../models/admin')
-const Product = require('../models/product');
 const bcrypt = require('bcrypt');
+const jwt = require('../utils/jwtUtils')
 
 exports.getSignUp = (req, res) => {
     res.render('signUp',{pageTitle: "Sign Up"})
@@ -21,7 +21,8 @@ exports.postSignUp = (req, res) => {
                 newUser = new userModel({
                     name: username,
                     email: email,
-                    password: hashedPass
+                    password: hashedPass,
+                    cart: { items: [] } 
                 });
             } else {
                 newUser = new adminModel({
@@ -30,7 +31,7 @@ exports.postSignUp = (req, res) => {
                     password: hashedPass
                 });
             }
-
+            
             newUser.save()
             .then(() => {
                 console.log('User created successfully');                
@@ -50,7 +51,32 @@ exports.getLogin = (req, res) => {
 };
 
 exports.postLogin = (req, res) => {
+    const { email, password } = req.body;
+    const User = req.body.role === 'user' ? userModel : adminModel;
+
+    User.findOne({ email })
+        .then((user) => {
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+
+            bcrypt.compare(password, user.password, (err, result) => {
+                if (err || !result) {
+                    return res.status(401).json({ error: 'Invalid password' });
+                }
+                
+                const payload = { id: user._id, email: user.email, role: req.body.role };
+                const token = jwt.generateToken(payload);
+                res.json({ token });
+            });
+        })
+        .catch((err) => {
+            console.error('Error logging in:', err);
+            res.status(500).json({ error: 'Internal server error' });
+        });
 };
 
+
 exports.logOut = (req, res) => {
+
 };

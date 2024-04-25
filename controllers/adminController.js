@@ -1,45 +1,52 @@
-const adminModel = require('../models/admin')
-const Product = require('../models/product')
-const order = require('../models/order')
+const Product = require('../models/product');
+const Order = require('../models/order');
 
 exports.getAllOrders = (req, res) => {
-    Product.find()
-        .then(products => {
-            res.render('user/products', {
-                pageTitle: "Products",
-                prods: products
-            })
+    const adminId = req.user.id;
+
+    Order.findById(adminId)
+        .then(orders => {
+            res.json({ success: true, orders });
         })
         .catch(err => {
-            console.log(`this is an error`, err)
-        })
+            console.error('Error fetching orders:', err);
+            res.status(500).json({ success: false, error: 'Error fetching orders' });
+        });
 };
 
 exports.getMyProducts = (req, res) => {
-    const prodId = req.params.prodId
-    Product.findById(prodId)
+    const adminId = req.user.id;
+
+    Product.findById(adminId)
         .then(product => {
-            res.render('user/product', {
-                prods: product
-            })
-        }).catch(err => {
-            console.log(`this is an error`, err)
+            res.json({ success: true, product });
         })
+        .catch(err => {
+            console.error('Error fetching product:', err);
+            res.status(500).json({ success: false, error: 'Error fetching product' });
+        });
 };
 
 exports.updateProduct = (req, res) => {
-    const prodId = req.params.prodId
-    const {title, description, price, image} = req.body
-    Product.findById(prodId)
-        .then(product => {
-            product.title = title,
-            product.description = description,
-            product.price = price,
-            product.image = image
-        })
-        .catch(err => {
-            console.log(err)
-        })
+    const prodId = req.params.prodId;
+    const { title, description, price, image } = req.body;
+
+    Product.findByIdAndUpdate(prodId, {
+        title,
+        description,
+        price,
+        imageURL: image
+    })
+    .then(updatedProduct => {
+        if (!updatedProduct) {
+            return res.status(404).json({ success: false, error: 'Product not found' });
+        }
+        res.json({ success: true, message: 'Product updated successfully' });
+    })
+    .catch(err => {
+        console.error('Error updating product:', err);
+        res.status(500).json({ success: false, error: 'Error updating product' });
+    });
 };
 
 exports.deleteProduct = (req, res) => {
@@ -48,51 +55,38 @@ exports.deleteProduct = (req, res) => {
     Product.findByIdAndDelete(prodId)
         .then(deletedProduct => {
             if (!deletedProduct) {
-                return res.status(404).send('Product not found');
+                return res.status(404).json({ success: false, error: 'Product not found' });
             }
-            console.log('Product deleted successfully:', deletedProduct);
-            res.status(200).send('Product deleted successfully');
+            res.json({ success: true, message: 'Product deleted successfully' });
         })
         .catch(err => {
             console.error('Error deleting product:', err);
-            res.status(500).send('Error deleting product');
+            res.status(500).json({ success: false, error: 'Error deleting product' });
         });
 };
 
 exports.getAddProduct = (req, res) => {
-    res.render('admin/addProduct', {
-        pageTitle: "Add Product"
-    })
+    res.json({ success: true, pageTitle: "Add Product" });
 };
 
 exports.postAddProduct = (req, res) => {
-    const {title, description, price, image} = req.body
-    console.log(req.body)
+    const adminId = req.user.id;
+    const { title, description, price, image } = req.body;
+
     const newProduct = new Product({
+        adminId,
         name: title,
-        description: description,
-        price: price,
+        description,
+        price,
         imageURL: image
-    })
+    });
 
     newProduct.save()
         .then(product => {
-            console.log('added successfully')
-            res.redirect('home')
+            res.json({ success: true, message: 'Product added successfully', product });
         })
         .catch(err => {
-            console.log(`sth went wrong`, err)
-        })
-};
-
-exports.getLogin = (req, res) => {
-
-};
-
-exports.postLogin = (req, res) => {
-
-};
-
-exports.signUp = (req, res) => {
-    
+            console.error('Error adding product:', err);
+            res.status(500).json({ success: false, error: 'Error adding product' });
+        });
 };

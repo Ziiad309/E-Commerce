@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 const db = require('./db');
 
 
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: false })); 
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.set('view engine', 'ejs');
@@ -18,7 +18,7 @@ const errorController = require('./controllers/errorController')
 
 app.use('/user', userRoutes);
 app.use('/admin', adminRoutes);
-app.use('/',authRoutes);
+app.use('/', authRoutes);
 
 app.get('/home', (req, res) => {
     res.render('home', {

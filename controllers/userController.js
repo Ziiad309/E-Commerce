@@ -1,95 +1,73 @@
-const userModel = require('../models/user')
+const User = require('../models/user');
 const Product = require('../models/product');
-const bcrypt = require('bcrypt');
-
-// exports.getAllProducts = (req, res) => {
-//     Product.find()
-//     .then(products => {
-//         res.render('products', {
-//             prods: products,
-//             pageTitle: "All Products",
-//             path: '/products'
-//         })
-//     }).catch(err => {
-//         console.log(err)
-//     })
-// };
-
-// exports.addToCart = (req, res) => {
-
-// };
-
-// exports.getAllOrders = (req, res) => {
-    
-// };
-
-// exports.getProduct = (req, res) => {
-//     const prodId = req.params.prodId
-//     Product.findById(prodId)
-//     .then(product => {
-//         console.log(`has been found`, product)
-//         res.render('product', {
-//             prod: product,
-//             pageTitle: "product",
-//             path: '/product'
-//         })
-//     })
-// };
-
-// exports.getLogin = (req, res) => {
-//     res.render('login', {pageTitle: "Login"})
-// };
-
-// exports.login = (req, res) => {
-//     const {email, password} = req.body
-//     console.log(email, password)
-//     res.send("done!")
-// };
-
-// exports.getSignUp = (req, res) => {
-//     res.render('signup', {pageTitle: "Sign Up"})
-// }
-
+const Order = require('../models/order');
 
 exports.getAllProducts = (req, res) => {
     Product.find()
         .then(products => {
-            console.log("get the products successfully");
-            res.render('user/products', {
-                pageTitle: "Products",
-                products: products
-            });
-        }).catch(err => {
-            console.log(`couldnt load the products`, err);
-            res.status(500).send('Error loading products');
+            res.json({ success: true, products });
+        })
+        .catch(err => {
+            console.error('Error loading products:', err);
+            res.status(500).json({ success: false, error: 'Error loading products' });
         });
 };
 
 exports.addToCart = (req, res) => {
+    const prodId = req.params.prodId;
+    const userId = req.user.id;
+
+    Product.findById(prodId)
+        .then(product => {
+            if (!product) {
+                return res.status(404).json({ success: false, error: 'Product not found' });
+            }
+            const newOrder = new Order({
+                user_id: userId,
+                admin_id: product.admin_id,
+                product: prodId,
+            });
+
+            return newOrder.save();
+        })
+        .then(order => {
+            return User.findByIdAndUpdate(userId, {
+                $pull: { 'cart.items': { productId: prodId } }
+            });
+        })
+        .then(() => {
+            res.json({ success: true, message: 'Order placed successfully' });
+        })
+        .catch(err => {
+            console.error('Error placing order:', err);
+            res.status(500).json({ success: false, error: `Error placing order: ${err}` });
+        });
 };
 
 exports.getAllOrders = (req, res) => {
-    Product.find()
-        .then(products => {
-            res.render('user/products', {
-                pageTitle: "Products",
-                products: products
-            });
+    User.findById(req.user.id)
+        .then(user => {
+            res.json({ success: true, orders: user.cart.items });
         })
         .catch(err => {
-            console.error(err);
-            res.status(500).send('Error fetching products');
+            console.error('Error fetching user orders:', err);
+            res.status(500).json({ success: false, error: 'Error fetching user orders' });
         });
 };
 
 exports.getProduct = (req, res) => {
-};
+    const prodId = req.params.prodId;
 
-exports.getLogin = (req, res) => {
-    res.render('user/login', {pageTitle: "Login"})
-};
+    Product.findById(prodId)
+        .then(product => {
+            if (!product) {
+                return res.status(404).json({ success: false, error: 'Product not found' });
+            }
 
-exports.login = (req, res) => {
-    const {email, password} = req.body
-    res.send(req.body)
+            res.json({ success: true, product });
+        })
+        .catch(err => {
+            console.error('Error fetching product:', err);
+            res.status(500).json({ success: false, error: 'Error fetching product' });
+        });
 };

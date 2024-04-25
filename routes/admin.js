@@ -1,24 +1,28 @@
 const express = require('express');
 const router = express.Router();
+const authenticateToken = require('../middlewares/authenticateToken')
 
 const adminController = require('../controllers/adminController');
 
-router.get('/orders', adminController.getAllOrders);
+const checkAdminRole = (req,res,next) => {
+    if(req.user.role !== "admin"){
+        return res.status(403).json({message: "unauthorized", role: req.user.role})
+    }
+    next()
+}
 
-router.get('/orders/:adminId', adminController.getMyProducts);
+router.use(authenticateToken)
 
-router.patch('/update-product/:prodId', adminController.updateProduct);
+router.get('/orders', checkAdminRole,adminController.getAllOrders);
 
-router.delete('/delete-product/:prodId', adminController.deleteProduct);
+router.get('/orders/:adminId', checkAdminRole,adminController.getMyProducts);
 
-router.get('/add-product', adminController.getAddProduct)
+router.patch('/update-product/:prodId', checkAdminRole,adminController.updateProduct);
 
-router.post('/add-product', adminController.postAddProduct);
+router.delete('/delete-product/:prodId', checkAdminRole,adminController.deleteProduct);
 
-// router.get('/login',adminController.getLogin)
+router.get('/add-product', checkAdminRole,adminController.getAddProduct)
 
-// router.post('/login', adminController.postLogin);
-
-// router.post('/sign-up', adminController.signUp);
+router.post('/add-product', checkAdminRole,adminController.postAddProduct);
 
 module.exports = router;

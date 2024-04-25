@@ -2,22 +2,23 @@ const express = require('express');
 const router = express.Router();
 
 const userController = require('../controllers/userController');
+const authenticateToken = require('../middlewares/authenticateToken')
 
-router.get('/products', userController.getAllProducts);
+const checkUserRole = (req,res,next) => {
+    if(req.user.role !== 'user')
+        return res.status(403).json({message: "problem", role: req.user.role})
+    next()
+}
 
-router.post('/add-to-cart/:prodId', userController.addToCart);
+router.use(authenticateToken)
 
-router.get('/orders', userController.getAllOrders);
+router.get('/products',checkUserRole, userController.getAllProducts);
 
-router.get('/product/:prodId', userController.getProduct);
+router.post('/add-to-cart/:prodId',checkUserRole, userController.addToCart);
 
-// router.get('/login',userController.getLogin)
+router.get('/orders',checkUserRole, userController.getAllOrders);
 
-// router.post('/login', userController.login);
-
-// router.get('/sign-up',userController.getSignUp);
-
-// router.post('/sign-up', userController.signUp);
+router.get('/product/:prodId',checkUserRole, userController.getProduct);
 
 
 module.exports = router;
