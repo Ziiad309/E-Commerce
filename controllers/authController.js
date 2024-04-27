@@ -2,10 +2,7 @@ const userModel = require('../models/user');
 const adminModel = require('../models/admin')
 const bcrypt = require('bcrypt');
 const jwt = require('../utils/jwtUtils')
-
-exports.getSignUp = (req, res) => {
-    res.render('signUp',{pageTitle: "Sign Up"})
-};
+const {addToBlacklist} = require('../middlewares/authenticateToken')
 
 exports.postSignUp = (req, res) => {
     const { username, email, password, role} = req.body;
@@ -46,10 +43,6 @@ exports.postSignUp = (req, res) => {
 };
 
 
-exports.getLogin = (req, res) => {
-    res.render('login',{pageTitle: "Login"})
-};
-
 exports.postLogin = (req, res) => {
     const { email, password } = req.body;
     const User = req.body.role === 'user' ? userModel : adminModel;
@@ -67,6 +60,7 @@ exports.postLogin = (req, res) => {
                 
                 const payload = { id: user._id, email: user.email, role: req.body.role };
                 const token = jwt.generateToken(payload);
+                req.session.token = token
                 res.json({ token });
             });
         })
@@ -78,5 +72,18 @@ exports.postLogin = (req, res) => {
 
 
 exports.logOut = (req, res) => {
-
+    const token = req.headers.authorization?.split(' ')[1];
+    if (token) {
+        addToBlacklist(token); 
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('Error destroying session:', err);
+                return res.status(500).json({ success: false, error: 'Error logging out' });
+            }
+            res.json({ success: true, message: 'Logged out successfully' });
+        });
+    } else {
+        res.status(400).json({ error: 'Token not provided' });
+    }
 };
+

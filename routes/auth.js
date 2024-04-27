@@ -4,15 +4,10 @@ require('dotenv').config();
 
 const authController = require('../controllers/authController')
 
-router.get('/sign-up', authController.getSignUp)
-
 router.post('/sign-up', authController.postSignUp)
-
-router.get('/login', authController.getLogin)
 
 router.post('/login', authController.postLogin)
 
-router.get('/logout', authController.logOut)
-
+router.post('/logout', authController.logOut);
 
 module.exports = router

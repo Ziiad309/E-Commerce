@@ -1,9 +1,9 @@
 const jwt = require('jsonwebtoken');
+const blackList = new Set();
 require('dotenv').config();
 
 const authenticateToken = (req, res, next) => {
-
-    console.log('header: ',req.headers)
+    console.log('header: ', req.headers);
 
     const authHeader = req.headers.authorization;
 
@@ -17,14 +17,22 @@ const authenticateToken = (req, res, next) => {
         return res.sendStatus(401); // Unauthorized if no token found
     }
 
-    jwt.verify(token, process.env.SECRET_KEY, (err, user) => {
+    if (blackList.has(token)) {
+        return res.sendStatus(401); // Token is blacklisted, unauthorized
+    }
+
+    jwt.verify(token, process.env.TOKEN_SECRET_KEY, (err, user) => {
         if (err) {
             return res.sendStatus(403); // Forbidden if token is invalid
         }
-        
+
         req.user = user; // Attach user information to the request
         next();
     });
 };
 
-module.exports = authenticateToken;
+const addToBlacklist = (token) => {
+    blackList.add(token);
+};
+
+module.exports = { authenticateToken, addToBlacklist };

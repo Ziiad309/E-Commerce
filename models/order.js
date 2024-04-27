@@ -5,15 +5,19 @@ const Schema = mongoose.Schema;
 const orderSchema = new Schema({
     user_id: {
         type: Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        required: true
+
     },
     admin_id: {
         type: Schema.Types.ObjectId,
-        ref: 'Admin'
+        ref: 'Admin',
+        required: true
     },
-    product: {
+    product_id: {
         type: Schema.Types.ObjectId,
-        ref: 'Product'
+        ref: 'Product',
+        required: true
     }
 });
 

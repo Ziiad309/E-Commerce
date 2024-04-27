@@ -4,7 +4,8 @@ const Order = require('../models/order');
 exports.getAllOrders = (req, res) => {
     const adminId = req.user.id;
 
-    Order.findById(adminId)
+    Order.find({ admin_id: adminId })
+        .populate('product_id')
         .then(orders => {
             res.json({ success: true, orders });
         })
@@ -17,7 +18,7 @@ exports.getAllOrders = (req, res) => {
 exports.getMyProducts = (req, res) => {
     const adminId = req.user.id;
 
-    Product.findById(adminId)
+    Product.find({admin_id : adminId})
         .then(product => {
             res.json({ success: true, product });
         })
@@ -29,10 +30,10 @@ exports.getMyProducts = (req, res) => {
 
 exports.updateProduct = (req, res) => {
     const prodId = req.params.prodId;
-    const { title, description, price, image } = req.body;
+    const { name, description, price, image } = req.body;
 
     Product.findByIdAndUpdate(prodId, {
-        title,
+        name,
         description,
         price,
         imageURL: image
@@ -71,13 +72,13 @@ exports.getAddProduct = (req, res) => {
 
 exports.postAddProduct = (req, res) => {
     const adminId = req.user.id;
-    const { title, description, price, image } = req.body;
+    const { name, description, price, image } = req.body;
 
     const newProduct = new Product({
-        adminId,
-        name: title,
-        description,
-        price,
+        admin_id: adminId,
+        name: name,
+        description: description,
+        price: price,
         imageURL: image
     });
 
